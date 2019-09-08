@@ -5,16 +5,18 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
+#include <limits.h>
+#include <errno.h>
 
 /* Write text to a specific file. */
 static void
-write_value (char *filename, char *text)
+write_text (char *destination, char *text)
 {
-    FILE *f = fopen (filename, "w");
+    FILE *f = fopen (destination, "w");
 
     if (f == NULL)
     {
-        fprintf (stderr, "Unable to open file; am I running as root?\n");
+        perror ("Unable to open file; am I running as root?");
         exit (1);
     }
 
@@ -35,29 +37,29 @@ is_number (char *text)
 
 /* Test if a string is a prefix of another string */
 static bool
-prefix (char *str, char *prefix)
+prefix (char *text, char *candidate_prefix)
 {
-    for (; *prefix; ++prefix, ++str)
+    for (; *candidate_prefix; ++candidate_prefix, ++text)
     {
-        if (!*str)
+        if (!*text)             /* check if text ends before prefix */
             return false;
 
-        if (*str != *prefix)
+        if (*text != *candidate_prefix) /* check for mismatch */
             return false;
     }
 
     return true;
 }
 
-/* Test if a file-name is in the form "cpuN", where N is
+/* Test if a directory-name is in the form "cpuN", where N is
 an integer. Returns -1 if not, but the actual number if so. */
 static int
-identify_file (char *name)
+identify_cpu_directory (char *directory_name)
 {
-    if (!prefix (name, "cpu"))
+    if (!prefix (directory_name, "cpu"))
         return -1;
 
-    char *number_part = name + 3;
+    char *number_part = directory_name + 3;
     if (!is_number (number_part))
         return -1;
 
@@ -77,32 +79,32 @@ apply_cpu_toggle (int cpus_desired)
     {
         while (ep = readdir (dp))
         {
-            int cpu_no = identify_file (ep->d_name);
+            int cpu_no = identify_cpu_directory (ep->d_name);
             if (cpu_no > 0)     /* CPU 0 cannot be deactivated */
             {
-                char filename[PATH_MAX];
-                strcpy (filename, dir);
-                strcat (filename, ep->d_name);
-                strcat (filename, "/online");
+                char destination[PATH_MAX];
+                strcpy (destination, dir);
+                strcat (destination, ep->d_name);
+                strcat (destination, "/online");
 
-                char *value = cpus_desired < 0
+                char *flag_text = cpus_desired < 0
                     || cpu_no < cpus_desired ? "1" : "0";
-                printf ("%s <- %s\n", filename, value);
-                write_value (filename, value);
+                printf ("%s <- %s\n", destination, flag_text);
+                write_text (destination, flag_text);
             }
         }
 
         closedir (dp);
     }
     else
-        perror ("Couldn't open the directory");
+        perror ("Unable to open the directory /sys/devices/system/cpu.");
 }
 
 int
 main (int argc, char *argv[])
 {
     if (argc == 1)
-        apply_cpu_toggle (-1);
+        apply_cpu_toggle (INT_MAX);
     else if (argc == 2 && is_number (argv[1]))
     {
         int desired = atoi (argv[1]);
