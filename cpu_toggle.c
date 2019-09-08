@@ -72,20 +72,23 @@ static void
 apply_cpu_toggle (int cpus_desired)
 {
     char *dir = "/sys/devices/system/cpu/";
+    char *online = "/online";
+
     struct dirent *ep;
     DIR *dp = opendir (dir);
+    int max_name = PATH_MAX - strlen (dir) - strlen (online) - 1;
 
     if (dp != NULL)
     {
         while (ep = readdir (dp))
         {
             int cpu_no = identify_cpu_directory (ep->d_name);
-            if (cpu_no > 0)     /* CPU 0 cannot be deactivated */
+            if (cpu_no > 0 && strlen (ep->d_name) <= max_name)  /* CPU 0 cannot be deactivated */
             {
                 char destination[PATH_MAX];
                 strcpy (destination, dir);
                 strcat (destination, ep->d_name);
-                strcat (destination, "/online");
+                strcat (destination, online);
 
                 char *flag_text = cpus_desired < 0
                     || cpu_no < cpus_desired ? "1" : "0";
