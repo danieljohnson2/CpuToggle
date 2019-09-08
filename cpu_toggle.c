@@ -6,8 +6,9 @@
 #include <stdbool.h>
 #include <string.h>
 
+/* Write text to a specific file. */
 static void
-write_value (char *filename, char *value)
+write_value (char *filename, char *text)
 {
     FILE *f = fopen (filename, "w");
 
@@ -17,10 +18,11 @@ write_value (char *filename, char *value)
         exit (1);
     }
 
-    fputs (value, f);
+    fputs (text, f);
     fclose (f);
 }
 
+/* Test if a string contains only digits. */
 static bool
 is_number (char *text)
 {
@@ -31,6 +33,7 @@ is_number (char *text)
     return true;
 }
 
+/* Test if a string is a prefix of another string */
 static bool
 prefix (char *str, char *prefix)
 {
@@ -46,6 +49,8 @@ prefix (char *str, char *prefix)
     return true;
 }
 
+/* Test if a file-name is in the form "cpuN", where N is
+an integer. Returns -1 if not, but the actual number if so. */
 static int
 identify_file (char *name)
 {
@@ -59,6 +64,8 @@ identify_file (char *name)
     return atoi (number_part);
 }
 
+/* The real work is here; this scans a special directory for suitable CPU subdirectories,
+and upon finding them it enables or disables them as appropriate. */
 static void
 apply_cpu_toggle (int cpus_desired)
 {
@@ -102,7 +109,7 @@ main (int argc, char *argv[])
         return 0;
     }
     else
-        fprintf (stderr, "Usage: cpu_toggle [number of cpus]\n");
+	    fprintf (stderr, "Usage: cpu_toggle [number of cpus]\n");
 
     return 1;
 }
