@@ -78,16 +78,17 @@ apply_cpu_toggle (int cpus_desired)
         while (ep = readdir (dp))
         {
             int cpu_no = identify_file (ep->d_name);
-            if (cpu_no > 0) /* CPU 0 cannot be deactivated */
+            if (cpu_no > 0)     /* CPU 0 cannot be deactivated */
             {
                 char filename[PATH_MAX];
-                strcpy(filename, dir);
-                strcat(filename, ep->d_name);
-                strcat(filename, "/online");
+                strcpy (filename, dir);
+                strcat (filename, ep->d_name);
+                strcat (filename, "/online");
 
-                char *value = cpus_desired < 0 || cpu_no < cpus_desired ? "1" : "0";
+                char *value = cpus_desired < 0
+                    || cpu_no < cpus_desired ? "1" : "0";
                 printf ("%s <- %s\n", filename, value);
-                write_value(filename, value);
+                write_value (filename, value);
             }
         }
 
@@ -106,10 +107,12 @@ main (int argc, char *argv[])
     {
         int desired = atoi (argv[1]);
         apply_cpu_toggle (desired);
-        return 0;
     }
     else
-	    fprintf (stderr, "Usage: cpu_toggle [number of cpus]\n");
+    {
+        fprintf (stderr, "Usage: cpu_toggle [number of cpus]\n");
+        return 1;
+    }
 
-    return 1;
+    return 0;
 }
