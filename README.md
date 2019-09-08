@@ -6,8 +6,12 @@ What is a little less common is that TimeShift is bugged and crashes if you have
 
 In Windows, you can disable CPUs with msconfig.exe, and a reboot. But in Linux you can disable them on the fly, and that's what this program does. It works by writing 0 or 1 to /sys/devices/system/cpu/cpu#/online. Like this:
 
+```bash
 sudo ./cpu_toggle 4 # Disable all but 4 CPUs
+```
 or
+```bash
 sudo ./cpu_toggle # Re-enable all CPUs
+```
 
 Yes, it must run as root. That is why it's a C program; it make this work with Lutris, it needs to be setuid root as Lutris won't elevate it, so it needs to be implicit. Scripts can't be setuid-root, so here we are.
